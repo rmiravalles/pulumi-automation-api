@@ -126,7 +126,7 @@ kubectl apply -f k8s/base/namespace.yaml
 kubectl apply -f k8s/base/pulumi-stack.yaml
 ```
 
-### 3. (Optional) Enable Flux reconciliation
+### 3. Enable Flux reconciliation
 
 ```bash
 kubectl apply -f k8s/flux/gitrepository.yaml
