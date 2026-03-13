@@ -1,0 +1,10 @@
+apiVersion: pulumi.com/v1
+kind: Stack
+metadata:
+  name: azure-platform-dev
+spec:
+  stack: dev
+  projectRepo: https://github.com/rmiravalles/pulumi-automation-api
+  repoDir: pulumi_program
+  branch: main
+  destroyOnFinalize: true
