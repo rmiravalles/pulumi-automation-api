@@ -47,7 +47,7 @@ At a high level:
 - Stack name: `dev`.
 - Project name: `azure-automation-api` (matches `pulumi.yaml`).
 - Program callback imports `pulumi_program.__main__`.
-- Installs `azure-native` plugin version `v2.0.0`.
+- Installs `azure-native` plugin version `v3.15.0`.
 - Sets config `azure-native:location=westeurope`.
 - Runs `stack.up()` and streams output.
 
@@ -94,6 +94,31 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+## CI/CD with GitHub Actions
+
+This repository now includes a workflow at `.github/workflows/ci-cd.yml`.
+
+Behavior:
+
+- On `pull_request` to `main`: run test job (`pytest`).
+- On `push` to `main`: run tests, then deploy with `python automation/deploy.py`.
+- Supports manual run via `workflow_dispatch`.
+
+### Required GitHub repository secrets
+
+Add these in `Settings` -> `Secrets and variables` -> `Actions`:
+
+- `PULUMI_CONFIG_PASSPHRASE`: passphrase used by the stack secrets manager.
+- `PULUMI_BACKEND_URL`: backend URL (for example `azblob://state`).
+- `AZURE_STORAGE_ACCOUNT`: storage account used by the Azure Blob Pulumi backend.
+- `AZURE_STORAGE_KEY`: storage key for that account.
+- `ARM_CLIENT_ID`: Azure service principal client ID.
+- `ARM_CLIENT_SECRET`: Azure service principal client secret.
+- `ARM_TENANT_ID`: Azure tenant ID.
+- `ARM_SUBSCRIPTION_ID`: Azure subscription ID.
+
+If you are not using an Azure Blob backend, you can omit `PULUMI_BACKEND_URL`, `AZURE_STORAGE_ACCOUNT`, and `AZURE_STORAGE_KEY`, and use your preferred Pulumi backend login strategy.
+
 ## Local Deployment (Automation API)
 
 Run the Python automation driver:
@@ -108,6 +133,29 @@ What this does:
 2. Installs Pulumi Azure Native plugin.
 3. Sets stack config.
 4. Executes deployment.
+
+### Troubleshooting Local Deployment
+
+If first run fails with `no stack named 'dev' found`, that part is expected while Pulumi tries to create the stack.
+
+If it then fails with `passphrase must be set`, configure one of the following before running `python automation/deploy.py`:
+
+```bash
+export PULUMI_CONFIG_PASSPHRASE='<your-strong-passphrase>'
+```
+
+Or use a file-based passphrase:
+
+```bash
+printf '%s' '<your-strong-passphrase>' > ~/.pulumi-passphrase
+chmod 600 ~/.pulumi-passphrase
+export PULUMI_CONFIG_PASSPHRASE_FILE=~/.pulumi-passphrase
+```
+
+Notes:
+
+- Keep the same passphrase for future runs so Pulumi can decrypt stack secrets.
+- If you are using an Azure Blob backend (`azblob://...`), also ensure backend variables are set (for example `AZURE_STORAGE_ACCOUNT` and either `AZURE_STORAGE_KEY` or `AZURE_STORAGE_SAS_TOKEN`).
 
 ## GitOps / Kubernetes Operator Workflow
 
@@ -247,6 +295,28 @@ Important detail:
 - `automation/deploy.py` and `pulumi.dev.yaml` set `azure-native:location`.
 
 This keeps local Automation API and stack configuration consistent.
+
+## Setting the state backend
+
+```bash
+
+
+
+# 1) Set backend storage account info
+export AZURE_STORAGE_ACCOUNT=<your-storage-account-name>
+export AZURE_STORAGE_KEY=$(az storage account keys list --account-name $AZURE_STORAGE_ACCOUNT --query '[0].value' -o tsv)
+# (or use AZURE_STORAGE_SAS_TOKEN instead of key)
+
+# 2) Ensure backend is selected
+pulumi login azblob://state
+
+# 3) Verify backend is reachable
+pulumi whoami
+
+# 4) Run deploy from repo root
+cd /home/rodrigo/Repos/pulumi-automation-api
+python automation/deploy.py
+```
 
 ## Testing
 

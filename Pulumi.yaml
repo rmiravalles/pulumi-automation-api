@@ -1,0 +1,3 @@
+main: /home/rodrigo/Repos/pulumi-automation-api
+name: azure-automation-api
+runtime: python

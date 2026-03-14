@@ -1,7 +1,16 @@
+import sys
+from pathlib import Path
+
 from pulumi import automation as auto
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+
 def pulumi_program():
+    if str(PROJECT_ROOT) not in sys.path:
+        # Inline runtime can execute from automation/; include repo root for imports.
+        sys.path.insert(0, str(PROJECT_ROOT))
     from pulumi_program import __main__
 
 
@@ -10,6 +19,7 @@ def deploy():
         stack_name="dev",
         project_name="azure-automation-api",
         program=pulumi_program,
+        opts=auto.LocalWorkspaceOptions(work_dir=str(PROJECT_ROOT)),
     )
 
     print("Installing plugins...")
