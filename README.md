@@ -13,6 +13,7 @@ The project provisions a small Azure baseline (Resource Group + Storage Account 
 	- [Table of Contents](#table-of-contents)
 	- [What This Repository Does](#what-this-repository-does)
 	- [Architecture](#architecture)
+		- [Architecture Diagram](#architecture-diagram)
 		- [Core Pulumi Component](#core-pulumi-component)
 		- [Pulumi Program](#pulumi-program)
 		- [Automation API Driver](#automation-api-driver)
@@ -52,6 +53,22 @@ At a high level:
 4. Provides Kubernetes manifests in `k8s/` for Pulumi Operator + Flux workflows.
 
 ## Architecture
+
+### Architecture Diagram
+
+```mermaid
+flowchart LR
+	Dev[Developer Commit / PR] --> GitHub[(GitHub Repo)]
+	GitHub -->|Git source| FluxSrc[Flux GitRepository]
+	FluxSrc --> FluxKus[Flux Kustomization]
+	FluxKus -->|Apply manifests in k8s/base| StackCR[Pulumi Stack CR]
+	StackCR --> Operator[Pulumi Kubernetes Operator]
+	Operator --> PulumiProg[Pulumi Program]
+	PulumiProg --> Azure[(Azure Resource Group + Storage + Static Website)]
+
+	Dev -->|Manual run| Automation[automation/deploy.py]
+	Automation --> PulumiProg
+```
 
 ### Core Pulumi Component
 
