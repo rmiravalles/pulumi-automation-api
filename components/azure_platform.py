@@ -1,4 +1,5 @@
 import hashlib
+from pathlib import Path
 
 import pulumi
 import pulumi_azure_native as azure
@@ -36,6 +37,35 @@ class AzurePlatform(pulumi.ComponentResource):
             opts=pulumi.ResourceOptions(parent=self)
         )
 
+        static_website = azure.storage.StorageAccountStaticWebsite(
+            f"{name}-website",
+            account_name=storage.name,
+            resource_group_name=rg.name,
+            index_document="index.html",
+            error404_document="index.html",
+            opts=pulumi.ResourceOptions(parent=storage),
+        )
+
+        index_path = Path(__file__).resolve().parent.parent / "website" / "index.html"
+        azure.storage.Blob(
+            f"{name}-index",
+            account_name=storage.name,
+            resource_group_name=rg.name,
+            container_name="$web",
+            blob_name="index.html",
+            content_type="text/html",
+            source=pulumi.FileAsset(str(index_path)),
+            opts=pulumi.ResourceOptions(parent=storage, depends_on=[static_website]),
+        )
+
+        website_url = storage.primary_endpoints.apply(lambda endpoints: endpoints.web)
+
+        self.resource_group = rg.name
+        self.storage_account_name = storage.name
+        self.website_url = website_url
+
         self.register_outputs({
-            "resourceGroup": rg.name
+            "resourceGroup": self.resource_group,
+            "storageAccountName": self.storage_account_name,
+            "websiteUrl": self.website_url,
         })

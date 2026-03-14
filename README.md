@@ -5,7 +5,7 @@ This repository is a Python-based infrastructure project that demonstrates two w
 1. Pulumi Automation API from a Python script.
 2. GitOps-style reconciliation using the Pulumi Kubernetes Operator and Flux manifests.
 
-The project provisions a small Azure baseline (Resource Group + Storage Account) through a reusable Pulumi component, and includes Kubernetes manifests to run that same Pulumi program inside a cluster.
+The project provisions a small Azure baseline (Resource Group + Storage Account) through a reusable Pulumi component, enables static website hosting on that storage account, and includes Kubernetes manifests to run that same Pulumi program inside a cluster.
 
 ## What This Repository Does
 
@@ -15,6 +15,7 @@ At a high level:
 2. Uses that component in `pulumi_program/__main__.py` to create:
 	 - an Azure Resource Group
 	 - an Azure Storage Account
+	 - a Storage static website endpoint with a sample `index.html`
 3. Exposes an Automation API entrypoint in `automation/deploy.py` that creates/selects a stack and runs `stack.up()`.
 4. Provides Kubernetes manifests in `k8s/` for Pulumi Operator + Flux workflows.
 
@@ -27,8 +28,10 @@ At a high level:
 - Implements `AzurePlatform` as a `pulumi.ComponentResource`.
 - Creates:
 	- `azure.resources.ResourceGroup` named `<name>-rg`
-	- `azure.storage.StorageAccount` named `<name>storage`
-- Registers output `resourceGroup`.
+	- `azure.storage.StorageAccount` for infra and website hosting
+	- `azure.storage.StorageAccountStaticWebsite` (`index.html` / `404`)
+	- `azure.storage.Blob` upload of `website/index.html` into `$web`
+- Registers outputs `resourceGroup`, `storageAccountName`, and `websiteUrl`.
 
 ### Pulumi Program
 
@@ -37,7 +40,7 @@ At a high level:
 - Reads `azure-native:location`.
 - Falls back to `westeurope` if not set.
 - Instantiates `AzurePlatform("demo-platform", location=...)`.
-- Exports `platformName`.
+- Exports `platformName` and `websiteUrl`.
 
 ### Automation API Driver
 
@@ -73,6 +76,8 @@ scripts/
 	deploy.sh                  # Applies Pulumi Stack base manifests
 tests/
 	test_component.py          # Basic component instantiation test
+website/
+	index.html                 # Sample static website page uploaded to $web
 ```
 
 ## Prerequisites
@@ -156,6 +161,33 @@ What this does:
 2. Installs Pulumi Azure Native plugin.
 3. Sets stack config.
 4. Executes deployment.
+
+After deployment, get the static website endpoint:
+
+```bash
+pulumi stack output websiteUrl
+```
+
+Then open the URL in your browser.
+
+### How to Update Website Content
+
+1. Edit `website/index.html`.
+2. Re-run the deployment:
+
+```bash
+python automation/deploy.py
+```
+
+3. Refresh the website URL in your browser.
+
+Optional verification:
+
+```bash
+pulumi preview
+```
+
+If `website/index.html` changed, preview should show an update to the `azure-native:storage:Blob` resource for `index.html`.
 
 ### Troubleshooting Local Deployment
 

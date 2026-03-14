@@ -76,3 +76,15 @@ jobs:
 
       - name: Deploy with Automation API
         run: python automation/deploy.py
+
+      - name: Show website URL
+        shell: bash
+        run: |
+          WEBSITE_URL=$("$HOME/.pulumi/bin/pulumi" stack output websiteUrl --stack dev)
+          echo "Website URL: $WEBSITE_URL"
+          echo "::notice title=Static Website URL::$WEBSITE_URL"
+          {
+            echo "## Deployment Output"
+            echo ""
+            echo "Static website: $WEBSITE_URL"
+          } >> "$GITHUB_STEP_SUMMARY"

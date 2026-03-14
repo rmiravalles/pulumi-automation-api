@@ -11,3 +11,4 @@ platform = AzurePlatform(
 )
 
 pulumi.export("platformName", "demo-platform")
+pulumi.export("websiteUrl", platform.website_url)
