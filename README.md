@@ -199,9 +199,25 @@ flux get kustomizations -n flux-system
 
 ### 5. Reconcile immediately (optional)
 
+If you have already applied this repo's Flux manifests (`k8s/flux/*.yaml`), use:
+
 ```bash
 flux reconcile source git azure-pulumi-platform -n flux-system
 flux reconcile kustomization pulumi-platform -n flux-system
+```
+
+If you only ran `flux bootstrap github` and did not apply `k8s/flux/*.yaml` yet, the default object names are `flux-system`:
+
+```bash
+flux reconcile source git flux-system -n flux-system
+flux reconcile kustomization flux-system -n flux-system
+```
+
+To switch to this repository's custom names (`azure-pulumi-platform` / `pulumi-platform`), apply:
+
+```bash
+kubectl apply -f k8s/flux/gitrepository.yaml
+kubectl apply -f k8s/flux/kustomization.yaml
 ```
 
 ### 6. Confirm Pulumi resources were applied
@@ -216,6 +232,7 @@ Notes:
 - `k8s/flux/gitrepository.yaml` points to `https://github.com/rmiravalles/pulumi-automation-api` on `main`.
 - `k8s/flux/kustomization.yaml` reconciles `./k8s/base` into `pulumi-system`.
 - Keep `k8s/rbac.yaml` and `k8s/base/pulumi-stack.yaml` valid, because Flux will continuously apply those manifests.
+- Troubleshooting: if you get `gitrepositories.source.toolkit.fluxcd.io "azure-pulumi-platform" not found`, run `flux get sources git -n flux-system` and use the name that exists, or apply `k8s/flux/*.yaml` first.
 
 ## Configuration
 
