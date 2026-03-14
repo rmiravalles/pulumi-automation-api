@@ -98,6 +98,22 @@ pip install -r requirements.txt
 
 This repository now includes a workflow at `.github/workflows/ci-cd.yml`.
 
+### Setup the workflow in GitHub
+
+1. Push this repository (including `.github/workflows/ci-cd.yml`) to GitHub.
+2. Open the repository in GitHub and go to `Settings` -> `Secrets and variables` -> `Actions`.
+3. Under `Repository secrets`, add all required secrets listed below.
+4. Go to the `Actions` tab and confirm workflows are enabled for the repository.
+5. Trigger CI by opening a pull request to `main`.
+6. Trigger CD by merging/pushing to `main`.
+7. Optionally trigger manually from `Actions` -> `CI-CD` -> `Run workflow`.
+
+Verification:
+
+- PR run should execute only the `Test` job.
+- Push to `main` should execute `Test` and then `Deploy`.
+- In a successful deploy run, you should see `Deploying stack...` in logs.
+
 Behavior:
 
 - On `pull_request` to `main`: run test job (`pytest`).
@@ -116,6 +132,13 @@ Add these in `Settings` -> `Secrets and variables` -> `Actions`:
 - `ARM_CLIENT_SECRET`: Azure service principal client secret.
 - `ARM_TENANT_ID`: Azure tenant ID.
 - `ARM_SUBSCRIPTION_ID`: Azure subscription ID.
+
+Where to get Azure values:
+
+- `ARM_SUBSCRIPTION_ID`: Azure Portal -> `Subscriptions` -> `<your subscription>` -> `Subscription ID`.
+- `ARM_TENANT_ID`: Azure Portal -> `Microsoft Entra ID` -> `Overview` -> `Tenant ID`.
+- `ARM_CLIENT_ID`: Azure Portal -> `Microsoft Entra ID` -> `App registrations` -> `<your app>` -> `Application (client) ID`.
+- `ARM_CLIENT_SECRET`: Azure Portal -> `App registrations` -> `<your app>` -> `Certificates & secrets` -> create a new client secret and copy `Value`.
 
 If you are not using an Azure Blob backend, you can omit `PULUMI_BACKEND_URL`, `AZURE_STORAGE_ACCOUNT`, and `AZURE_STORAGE_KEY`, and use your preferred Pulumi backend login strategy.
 
