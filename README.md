@@ -65,7 +65,7 @@ k8s/
 	flux/
 		gitrepository.yaml       # Flux source definition
 		kustomization.yaml       # Flux reconciliation definition
-	rbac.yaml                  # Placeholder (currently empty)
+	rbac.yaml                  # SA/Role/RoleBinding for Stack runner
 pulumi_program/
 	__main__.py                # Pulumi program used by Automation and Operator
 scripts/
@@ -111,29 +111,47 @@ What this does:
 
 ## GitOps / Kubernetes Operator Workflow
 
-### 1. Install Pulumi Operator
+Run these commands in this exact order from the repository root:
 
 ```bash
+# 0) Optional: activate virtual environment
+source .venv/bin/activate
+
+# 1) Install Pulumi Kubernetes Operator
 bash scripts/install_operator.sh
-```
 
-### 2. Apply base manifests
-
-Current files are in `k8s/base/`, so apply them directly:
-
-```bash
+# 2) Create namespace for Stack resources
 kubectl apply -f k8s/base/namespace.yaml
+
+# 3) Apply RBAC for the Stack runner service account
+kubectl apply -f k8s/rbac.yaml
+
+# 4) Apply the Pulumi Stack custom resource
 kubectl apply -f k8s/base/pulumi-stack.yaml
-```
 
-### 3. Enable Flux reconciliation
-
-```bash
+# 5) (Optional) Enable Flux reconciliation
 kubectl apply -f k8s/flux/gitrepository.yaml
 kubectl apply -f k8s/flux/kustomization.yaml
 ```
 
-Flux will watch this repository and reconcile `k8s/base` on the configured interval.
+Before step 4, make sure `k8s/base/pulumi-stack.yaml` includes these fields:
+
+```yaml
+metadata:
+	namespace: pulumi-system
+spec:
+	serviceAccountName: pulumi-stack-sa
+```
+
+If Flux is enabled, it will watch this repository and reconcile `k8s/base` on the configured interval.
+
+Quick verification:
+
+```bash
+kubectl get sa,role,rolebinding -n pulumi-system
+kubectl get stacks -n pulumi-system
+kubectl get pods -n pulumi-kubernetes-operator
+```
 
 ## Configuration
 
@@ -163,7 +181,7 @@ Current test coverage is minimal and only checks component instantiation.
 
 ## Current State and Limitations
 
-- `k8s/rbac.yaml` is present but empty.
+- RBAC for the Stack runner must exist in `k8s/rbac.yaml` before applying `k8s/base/pulumi-stack.yaml`.
 - There is no root-level Pulumi `__main__.py`; this repo currently relies on the automation script and `pulumi_program/` directory pattern.
 
 ## Why This Repo Is Useful

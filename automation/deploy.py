@@ -13,7 +13,7 @@ def deploy():
     )
 
     print("Installing plugins...")
-    stack.workspace.install_plugin("azure-native", "v2.0.0")
+    stack.workspace.install_plugin("azure-native", "v3.15.0")
 
     print("Setting config...")
     stack.set_config("azure-native:location", auto.ConfigValue(value="westeurope"))
