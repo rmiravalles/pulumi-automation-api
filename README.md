@@ -153,6 +153,70 @@ kubectl get stacks -n pulumi-system
 kubectl get pods -n pulumi-kubernetes-operator
 ```
 
+## Bootstrap This Repository with FluxCD
+
+Use this flow when setting up Flux on a fresh cluster and wiring it to this repository.
+
+Prerequisites:
+
+- `flux` CLI installed
+- `kubectl` configured to the target cluster
+- GitHub personal access token with repo admin/write permissions
+
+### 1. Verify cluster access
+
+```bash
+kubectl get nodes
+```
+
+### 2. Export GitHub credentials for bootstrap
+
+```bash
+export GITHUB_TOKEN=<your-github-pat>
+export GITHUB_USER=rmiravalles
+```
+
+### 3. Bootstrap Flux controllers and Git source
+
+```bash
+flux bootstrap github \
+	--owner=$GITHUB_USER \
+	--repository=pulumi-automation-api \
+	--branch=main \
+	--path=./k8s/flux \
+	--personal
+```
+
+This installs Flux in `flux-system` and commits/uses manifests from `k8s/flux`.
+
+### 4. Confirm Flux health
+
+```bash
+flux check
+flux get sources git -n flux-system
+flux get kustomizations -n flux-system
+```
+
+### 5. Reconcile immediately (optional)
+
+```bash
+flux reconcile source git azure-pulumi-platform -n flux-system
+flux reconcile kustomization pulumi-platform -n flux-system
+```
+
+### 6. Confirm Pulumi resources were applied
+
+```bash
+kubectl get namespace pulumi-system
+kubectl get stacks -n pulumi-system
+```
+
+Notes:
+
+- `k8s/flux/gitrepository.yaml` points to `https://github.com/rmiravalles/pulumi-automation-api` on `main`.
+- `k8s/flux/kustomization.yaml` reconciles `./k8s/base` into `pulumi-system`.
+- Keep `k8s/rbac.yaml` and `k8s/base/pulumi-stack.yaml` valid, because Flux will continuously apply those manifests.
+
 ## Configuration
 
 Current config files:
