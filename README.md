@@ -1,11 +1,43 @@
-# Pulumi Automation API Azure Platform Example
+# Pulumi Automation API Azure Platform Experiment
 
 This repository is a Python-based infrastructure project that demonstrates two ways to manage Azure resources with Pulumi:
 
 1. Pulumi Automation API from a Python script.
 2. GitOps-style reconciliation using the Pulumi Kubernetes Operator and Flux manifests.
 
-The project provisions a small Azure baseline (Resource Group + Storage Account) through a reusable Pulumi component, enables static website hosting on that storage account, and includes Kubernetes manifests to run that same Pulumi program inside a cluster.
+The project provisions a small Azure baseline (Resource Group + Storage Account + Static Website) through a reusable Pulumi component, enables static website hosting on that storage account, and includes Kubernetes manifests to run that same Pulumi program inside a cluster.
+
+## Table of Contents
+
+- [Pulumi Automation API Azure Platform Experiment](#pulumi-automation-api-azure-platform-experiment)
+	- [Table of Contents](#table-of-contents)
+	- [What This Repository Does](#what-this-repository-does)
+	- [Architecture](#architecture)
+		- [Core Pulumi Component](#core-pulumi-component)
+		- [Pulumi Program](#pulumi-program)
+		- [Automation API Driver](#automation-api-driver)
+	- [Repository Layout](#repository-layout)
+	- [Prerequisites](#prerequisites)
+	- [Setup](#setup)
+	- [CI/CD with GitHub Actions](#cicd-with-github-actions)
+		- [Setup the workflow in GitHub](#setup-the-workflow-in-github)
+		- [Required GitHub repository secrets](#required-github-repository-secrets)
+	- [Local Deployment (Automation API)](#local-deployment-automation-api)
+		- [How to Update Website Content](#how-to-update-website-content)
+		- [Troubleshooting Local Deployment](#troubleshooting-local-deployment)
+	- [GitOps / Kubernetes Operator Workflow](#gitops--kubernetes-operator-workflow)
+	- [Bootstrap This Repository with FluxCD](#bootstrap-this-repository-with-fluxcd)
+		- [1. Verify cluster access](#1-verify-cluster-access)
+		- [2. Export GitHub credentials for bootstrap](#2-export-github-credentials-for-bootstrap)
+		- [3. Bootstrap Flux controllers and Git source](#3-bootstrap-flux-controllers-and-git-source)
+		- [4. Confirm Flux health](#4-confirm-flux-health)
+		- [5. Reconcile immediately (optional)](#5-reconcile-immediately-optional)
+		- [6. Confirm Pulumi resources were applied](#6-confirm-pulumi-resources-were-applied)
+	- [Configuration](#configuration)
+	- [Setting the state backend](#setting-the-state-backend)
+	- [Testing](#testing)
+	- [Current State and Limitations](#current-state-and-limitations)
+	- [Why This Repo Is Useful](#why-this-repo-is-useful)
 
 ## What This Repository Does
 
