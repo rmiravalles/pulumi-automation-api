@@ -1,3 +1,0 @@
-name: azure-automation-api
-runtime: python
-description: Azure platform deployed via Pulumi and Kubernetes
